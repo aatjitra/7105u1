@@ -133,7 +133,7 @@ static unsigned long inc_cpu_load;
 /*
  * CPU freq will be increased to maximum if measured load > inc_max_load;
  */
-#define DEFAULT_INC_MAX_LOAD 90
+#define DEFAULT_INC_MAX_LOAD 95
 static unsigned long inc_max_load;
 
 /*
@@ -492,7 +492,7 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 	
 		if (cpu_load >= inc_max_load) {
 		
-			new_freq = pcpu->policy->cur + 200000;
+			new_freq = pcpu->policy->max;
 			if (new_freq >= pcpu->policy->max)
 				new_freq = pcpu->policy->max; }
 			
@@ -500,7 +500,7 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 		
 			new_freq = pcpu->policy->cur + 100000;
 			if (new_freq >= pcpu->policy->max)
-				new_freq = pcpu->policy->max; }
+				new_freq = pcpu->policy->max - 200000; }
 
 	} else {
 	
