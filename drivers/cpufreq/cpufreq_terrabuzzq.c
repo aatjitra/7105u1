@@ -488,26 +488,24 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 	 * START terrabuzz algorithm section
 	 */
 
-	if (cpu_load >= inc_cpu_load) {
+	if (cpu_load >= inc_max_load) {
+
+		new_freq = pcpu->policy->max;
+
+	} else if (cpu_load >= inc_cpu_load) {
 	
-		if (cpu_load >= inc_max_load) {
-		
+		new_freq = pcpu->policy->cur + 100000;
+
+		if (new_freq >= pcpu->policy->max)
 			new_freq = pcpu->policy->max;
-			if (new_freq >= pcpu->policy->max)
-				new_freq = pcpu->policy->max; }
-			
-		else {
 		
-			new_freq = pcpu->policy->cur + 100000;
-			if (new_freq >= pcpu->policy->max)
-				new_freq = 1200000; }
+	} else if (cpu_load <= dec_cpu_load) {
+	
+		new_freq = pcpu->policy->min;
 
 	} else {
-	
-		if (cpu_load < dec_cpu_load) {
-			new_freq = pcpu->policy->min; }
-		else {
-			new_freq = pcpu->policy->cur; }
+		
+		new_freq = pcpu->policy->cur;
 	
 	}
 	
