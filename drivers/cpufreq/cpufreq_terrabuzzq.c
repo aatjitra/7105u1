@@ -481,23 +481,27 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 	 * (since last frequency change).
 	 */
 
+	/* Simple logic of TerraBuzz is to increase speed by 200 MHz if load is more than
+	 * inc_max_load but if load in only more than inc_cpu_load then cpu will increase
+	 * by 100 MHz and limited to 1400 MHz.
+	 * CPU clock will remain if the load falls below inc_cpu_load but above dec_cpu_load
+	 * and if load falls below dec_cpu_load, CPU clock will falls into minimum frequency
+	*/
+
 	if (load_since_change > cpu_load)
 		cpu_load = load_since_change;
 	
-	/*
-	 * START terrabuzz algorithm section
-	 */
-
 	if (cpu_load >= inc_max_load) {
 
-		new_freq = pcpu->policy->max;
+		new_freq = pcpu->policy->cur + 200000;
+		if (new_freq >= pcpu->policy->max)
+			new_freq = pcpu->policy->max;
 
 	} else if (cpu_load >= inc_cpu_load) {
 	
 		new_freq = pcpu->policy->cur + 100000;
-
-		if (new_freq >= pcpu->policy->max)
-			new_freq = pcpu->policy->max;
+		if (new_freq >= 1400000)
+			new_freq = 1400000;
 		
 	} else if (cpu_load <= dec_cpu_load) {
 	
