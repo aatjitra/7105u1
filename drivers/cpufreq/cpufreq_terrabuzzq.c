@@ -133,7 +133,7 @@ static unsigned long inc_cpu_load;
 /*
  * CPU freq will be increased to maximum if measured load > inc_max_load;
  */
-#define DEFAULT_INC_MAX_LOAD 95
+#define DEFAULT_INC_MAX_LOAD 98
 static unsigned long inc_max_load;
 
 /*
@@ -153,6 +153,10 @@ static unsigned long timer_rate;
  * Use minimum frequency while suspended.
  */
 static unsigned int early_suspended;
+
+#define SCREEN_OFF_LOWEST_STEP 		(0xffffffff)
+#define DEFAULT_SCREEN_OFF_MIN_STEP	(SCREEN_OFF_LOWEST_STEP)
+static unsigned long screen_off_min_step;
 
 /*
  *  Normalize the sampling between CPUs
@@ -297,7 +301,7 @@ static int hotplug_rq[4][2] = {
 
 static int hotplug_freq[4][2] = {
 	{0, 800000},
-	{600000, 1000000},
+	{1000000, 1200000},
 	{1000000, 1200000},
 	{1200000, 0}
 };
@@ -308,7 +312,7 @@ static int hotplug_rq[4][2] = {
 
 static int hotplug_freq[4][2] = {
 	{0, 800000},
-	{600000, 1000000},
+	{1000000, 1200000},
 	{1000000, 1200000},
 	{1200000, 0}
 };
@@ -369,6 +373,39 @@ static unsigned int get_lulzfreq_table_size(struct cpufreq_lulzactive_cpuinfo *p
 	pcpu->lulzfreq_table[size].index = 0;
 	pcpu->lulzfreq_table[size].frequency = CPUFREQ_TABLE_END;
 	return size;
+}
+
+static inline void fix_screen_off_min_step(struct cpufreq_lulzactive_cpuinfo *pcpu) {
+	if (pcpu->lulzfreq_table_size <= 0) {
+		screen_off_min_step = 0;
+		return;
+	}
+	
+	if (DEFAULT_SCREEN_OFF_MIN_STEP == screen_off_min_step) 
+		for(screen_off_min_step=0;
+		pcpu->lulzfreq_table[screen_off_min_step].frequency != 500000;
+		screen_off_min_step++);
+	
+	if (screen_off_min_step >= pcpu->lulzfreq_table_size)
+		for(screen_off_min_step=0;
+		pcpu->lulzfreq_table[screen_off_min_step].frequency != 500000;
+		screen_off_min_step++);
+}
+
+static inline unsigned int adjust_screen_off_freq(
+	struct cpufreq_lulzactive_cpuinfo *pcpu, unsigned int freq) {
+	
+	if (early_suspended && freq > pcpu->lulzfreq_table[screen_off_min_step].frequency) {		
+		freq = pcpu->lulzfreq_table[screen_off_min_step].frequency;
+		pcpu->target_freq = pcpu->policy->cur;
+		
+		if (freq > pcpu->policy->max)
+			freq = pcpu->policy->max;
+		if (freq < pcpu->policy->min)
+			freq = pcpu->policy->min;
+	}
+	
+	return freq;
 }
 
 static void cpufreq_lulzactive_timer(unsigned long data)
@@ -483,7 +520,7 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 
 	/* Simple logic of TerraBuzz is to increase speed by 200 MHz if load is more than
 	 * inc_max_load but if load in only more than inc_cpu_load then cpu will increase
-	 * by 100 MHz and limited to 1400 MHz.
+	 * by 100 MHz and limited to 1200 MHz.
 	 * CPU clock will remain if the load falls below inc_cpu_load but above dec_cpu_load
 	 * and if load falls below dec_cpu_load, CPU clock will falls into minimum frequency
 	*/
@@ -500,8 +537,8 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 	} else if (cpu_load >= inc_cpu_load) {
 	
 		new_freq = pcpu->policy->cur + 100000;
-		if (new_freq >= 1400000)
-			new_freq = 1400000;
+		if (new_freq >= 1200000)
+			new_freq = 1200000;
 		
 	} else if (cpu_load <= dec_cpu_load) {
 	
@@ -525,6 +562,8 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 
 	if (dbs_tuners_ins.ignore_nice)
 		pcpu->freq_change_prev_cpu_nice = kstat_cpu(data).cpustat.nice;
+
+	new_freq = adjust_screen_off_freq(pcpu, new_freq);
 
 	if (pcpu->target_freq == new_freq)
 		goto rearm_if_notmax;
@@ -1280,6 +1319,7 @@ static int cpufreq_governor_lulzactive(struct cpufreq_policy *policy,
 			smp_wmb();
 			pcpu->lulzfreq_table_size = get_lulzfreq_table_size(pcpu);
 
+			fix_screen_off_min_step(pcpu);
 			if (dbs_tuners_ins.ignore_nice) {
 				pcpu->freq_change_prev_cpu_nice =
 					kstat_cpu(j).cpustat.nice;
@@ -1423,6 +1463,7 @@ static int __init cpufreq_lulzactive_init(void)
 	inc_max_load = DEFAULT_INC_MAX_LOAD;
 	dec_cpu_load = DEFAULT_DEC_CPU_LOAD;
 	early_suspended = 0;
+	screen_off_min_step = DEFAULT_SCREEN_OFF_MIN_STEP;
 	timer_rate = DEFAULT_TIMER_RATE;
 	ret = init_rq_avg();
 	if(ret) return ret;
