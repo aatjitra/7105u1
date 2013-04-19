@@ -8394,8 +8394,6 @@ void __init sched_init(void)
 
 	calc_mask_update = jiffies + LOAD_FREQ;
 
-   /*
-    * During early bootup we pretend to be a no
 	/*
 	 * During early bootup we pretend to be a normal task:
 	 */
