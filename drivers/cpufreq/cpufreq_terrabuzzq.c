@@ -133,7 +133,7 @@ static unsigned long inc_cpu_load;
 /*
  * CPU freq will be increased to maximum if measured load > inc_max_load;
  */
-#define DEFAULT_INC_MAX_LOAD 98
+#define DEFAULT_INC_MAX_LOAD 100
 static unsigned long inc_max_load;
 
 /*
@@ -300,10 +300,10 @@ static int hotplug_rq[4][2] = {
 };
 
 static int hotplug_freq[4][2] = {
-	{0, 800000},
+	{0, 1200000},
 	{1000000, 1200000},
 	{1000000, 1200000},
-	{1200000, 0}
+	{1000000, 0}
 };
 #else
 static int hotplug_rq[4][2] = {
@@ -311,10 +311,10 @@ static int hotplug_rq[4][2] = {
 };
 
 static int hotplug_freq[4][2] = {
-	{0, 800000},
+	{0, 1200000},
 	{1000000, 1200000},
 	{1000000, 1200000},
-	{1200000, 0}
+	{1000000, 0}
 };
 #endif
 
@@ -518,35 +518,37 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 	 * (since last frequency change).
 	 */
 
-	/* Simple logic of TerraBuzz is to increase speed by 200 MHz if load is more than
+	/* Simple logic of TerraBuzz is to increase speed by 100/200 MHz if load is more than
 	 * inc_max_load but if load in only more than inc_cpu_load then cpu will increase
 	 * by 100 MHz and limited to 1200 MHz.
 	 * CPU clock will remain if the load falls below inc_cpu_load but above dec_cpu_load
 	 * and if load falls below dec_cpu_load, CPU clock will falls into minimum frequency
-	*/
+	 */
 
 	if (load_since_change > cpu_load)
 		cpu_load = load_since_change;
 	
 	if (cpu_load >= inc_max_load) {
 
-		new_freq = pcpu->policy->cur + 200000;
+		new_freq = pcpu->policy->cur + 100000;
 		if (new_freq >= pcpu->policy->max)
 			new_freq = pcpu->policy->max;
 
 	} else if (cpu_load >= inc_cpu_load) {
 	
 		new_freq = pcpu->policy->cur + 100000;
-		if (new_freq >= 1200000)
-			new_freq = 1200000;
+		if (new_freq >= 1400000)
+			new_freq = 1400000;
 		
-	} else if (cpu_load <= dec_cpu_load) {
+	} else if (cpu_load > dec_cpu_load) {
 	
-		new_freq = pcpu->policy->min;
+		new_freq = pcpu->policy->cur + 100000;
+		if (new_freq >= 1200000)
+			new_freq = 1200000;  
 
 	} else {
 		
-		new_freq = pcpu->policy->cur;
+		new_freq = pcpu->policy->min;
 	
 	}
 	
