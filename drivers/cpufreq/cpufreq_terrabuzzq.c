@@ -530,7 +530,7 @@ static void cpufreq_lulzactive_timer(unsigned long data)
 	
 	if (cpu_load >= inc_max_load) {
 
-		new_freq = pcpu->policy->cur + 100000;
+		new_freq = pcpu->policy->cur + 200000;
 		if (new_freq >= pcpu->policy->max)
 			new_freq = pcpu->policy->max;
 
