@@ -112,8 +112,8 @@ int step0_vol = 875000;
 #if (MALI_DVFS_STEPS > 1)
 int step1_clk = 266;
 int step1_vol = 900000;
-int step0_up = 50;
-int step1_down = 30;
+int step0_up = 30;
+int step1_down = 20;
 #if (MALI_DVFS_STEPS > 2)
 int step2_clk = 350;
 int step2_vol = 950000;
@@ -158,9 +158,9 @@ mali_dvfs_table mali_dvfs[MALI_DVFS_STEPS]={
 };
 
 mali_dvfs_threshold_table mali_dvfs_threshold[MALI_DVFS_STEPS]={
-	{0   , 50},
+	{0   , 30},
 #if (MALI_DVFS_STEPS > 1)
-	{30  , 90},
+	{20  , 90},
 #if (MALI_DVFS_STEPS > 2)
 	{85  , 90},
 #if (MALI_DVFS_STEPS > 3)
