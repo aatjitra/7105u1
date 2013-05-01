@@ -270,6 +270,9 @@ mali-y += \
 endif #($(CONFIG_CPU_EXYNOS4210),y)
 endif #($(USING_MALI_DVFS_ENABLED),1)
 
+mali-y += common/gpu_clock_control.o
+mali-y += common/gpu_voltage_control.o
+
 ifeq ($(PANIC_ON_WATCHDOG_TIMEOUT),1)
 	EXTRA_CFLAGS += -DUSING_KERNEL_PANIC
 endif
