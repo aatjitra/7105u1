@@ -579,7 +579,7 @@ mali_bool init_mali_dvfs_status(int step)
 	/*default status
 	add here with the right function to get initilization value.
 	*/
-	mali_policy.lowStep = findStep(160);
+	mali_policy.lowStep = findStep(266);
 	mali_policy.highStep = (samsung_rev() >= EXYNOS4412_REV_2_0) ? findStep(533) : findStep(440);
 	
 	if (!mali_dvfs_wq)
