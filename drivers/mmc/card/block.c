@@ -2444,6 +2444,8 @@ static const struct mmc_fixup blk_fixups[] =
 		  MMC_QUIRK_MOVINAND_SECURE),
 	MMC_FIXUP("VZL00M", CID_MANFID_SAMSUNG, CID_OEMID_ANY, add_quirk_mmc,
 		  MMC_QUIRK_MOVINAND_SECURE),
+	MMC_FIXUP("VTU00M", CID_MANFID_ANY, CID_OEMID_ANY,
+		  mmc_movi_sds_add_quirk, MMC_QUIRK_MOVINAND_SDS),
 
 	END_FIXUP
 };
