@@ -123,13 +123,10 @@ struct mdnie_info *g_mdnie;
 static struct mdnie_backlight_value b_value;
 #endif
 
-extern unsigned short mdnie_reg_hook(unsigned short reg, unsigned short value);
-extern unsigned short *mdnie_sequence_hook(struct mdnie_info *pmdnie, unsigned short *seq);
-
-int mdnie_send_sequence(struct mdnie_info *mdnie, unsigned short *seq)
+int mdnie_send_sequence(struct mdnie_info *mdnie, const unsigned short *seq)
 {
 	int ret = 0, i = 0;
-	unsigned short *wbuf;
+	const unsigned short *wbuf;
 
 	if (IS_ERR_OR_NULL(seq)) {
 		dev_err(mdnie->dev, "mdnie sequence is null\n");
@@ -138,12 +135,12 @@ int mdnie_send_sequence(struct mdnie_info *mdnie, unsigned short *seq)
 
 	mutex_lock(&mdnie->dev_lock);
 
-	wbuf = mdnie_sequence_hook(mdnie, seq);
+	wbuf = seq;
 
 	s3c_mdnie_mask();
 
 	while (wbuf[i] != END_SEQ) {
-		mdnie_write(wbuf[i], mdnie_reg_hook(wbuf[i], wbuf[i+1]));
+		mdnie_write(wbuf[i], wbuf[i+1]);
 		i += 2;
 	}
 
@@ -923,12 +920,9 @@ static struct miscdevice mdnie_device = {
 	.name = "mdnie",
 };
 
-extern void init_intercept_control(struct kobject *kobj);
-
 static int mdniemod_create_sysfs(void)
 {
 	int ret;
-	struct kobject *kobj;
 
 	ret = misc_register(&mdnie_device);
 	if (ret) {
@@ -936,11 +930,7 @@ static int mdniemod_create_sysfs(void)
 	    return 1;
 	}
 
-	kobj = kobject_create_and_add("scenario_control", &mdnie_device.this_device->kobj);
-
-	init_intercept_control(&mdnie_device.this_device->kobj);
-
-	if (sysfs_create_group(kobj, &mdnie_group) < 0) {
+	if (sysfs_create_group(&mdnie_device.this_device->kobj, &mdnie_group) < 0) {
 	    pr_err("%s sysfs_create_group fail\n", __FUNCTION__);
 	    pr_err("Failed to create sysfs group for device (%s)!\n", mdnie_device.name);
 	}
