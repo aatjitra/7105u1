@@ -127,7 +127,7 @@ static unsigned int clkdiv_cpu0_4412[CPUFREQ_LEVEL_END][8] = {
 	 * { DIVCORE, DIVCOREM0, DIVCOREM1, DIVPERIPH,
 	 *		DIVATB, DIVPCLK_DBG, DIVAPLL, DIVCORE2 }
 	 */
-/* ARM L0: 1800Mhz */
+	/* ARM L0: 1800Mhz */
 	{ 0, 3, 7, 0, 6, 1, 2, 0 },
 
 	/* ARM L1: 1700Mhz */
